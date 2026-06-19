@@ -1,0 +1,5 @@
+key.json
+*.json.local
+.env
+.git
+README.md
