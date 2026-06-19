@@ -8,21 +8,17 @@ if [ -n "${GOOGLE_APPLICATION_CREDENTIALS_JSON:-}" ]; then
   export GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 fi
 
-# Railway injects PORT and RAILWAY_PUBLIC_DOMAIN automatically.
+# Railway injects PORT automatically.
 PORT="${PORT:-8000}"
-if [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
-  BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}"
-else
-  BASE_URL="http://localhost:${PORT}"
-fi
 
-# Run the GA4 stdio MCP server behind an SSE endpoint so Cowork can
-# connect to it by URL (same pattern as the CallRail server).
+# Serve the GA4 stdio MCP server over the modern Streamable HTTP transport at
+# /mcp so Cowork and Claude Code connect reliably. --stateful keeps one warm
+# session bound to the single stdio child.
 exec supergateway \
   --stdio "analytics-mcp" \
+  --outputTransport streamableHttp \
+  --streamableHttpPath /mcp \
+  --stateful \
   --port "$PORT" \
-  --baseUrl "$BASE_URL" \
-  --ssePath /sse \
-  --messagePath /message \
   --healthEndpoint /healthz \
   --cors
